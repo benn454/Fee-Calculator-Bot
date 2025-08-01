@@ -7,23 +7,24 @@ const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.DISCORD_GUILD_ID; // Optional: for testing in a specific server
 
-const FINAL_VALUE_FEE_PERCENTAGE = 0.131;
-const FIXED_FEE = 0.3;
+const calculateFees = (saleAmount) => {
+  const finalValueFeePercentage = 0.1144; // 11.44% for Basic Store with ABN
+  const fixedFee = 0.30; // Fixed per order fee
 
-function calculateFees(salePrice, buyerPostage, sellerPostageCost) {
-  const totalChargedToBuyer = salePrice + buyerPostage;
-  const finalValueFee = totalChargedToBuyer * FINAL_VALUE_FEE_PERCENTAGE + FIXED_FEE;
+  const finalValueFee = saleAmount * finalValueFeePercentage + fixedFee;
   const totalFees = finalValueFee;
-  const netProfit = salePrice - sellerPostageCost - totalFees;
-  const profitMargin = (netProfit / totalChargedToBuyer) * 100;
+
+  const totalAfterFees = saleAmount - totalFees;
+  const profitMargin = (totalAfterFees / saleAmount) * 100;
 
   return {
     finalValueFee: finalValueFee.toFixed(2),
     totalFees: totalFees.toFixed(2),
-    netProfit: netProfit.toFixed(2),
-    profitMargin: profitMargin.toFixed(2)
+    totalAfterFees: totalAfterFees.toFixed(2),
+    profitMargin: profitMargin.toFixed(2),
   };
-}
+};
+
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -45,8 +46,7 @@ client.on(Events.InteractionCreate, async interaction => {
       `💸 **eBay Fee Breakdown (AUD)**\n` +
       `• Final Value Fee: $${result.finalValueFee}\n` +
       `• Total Fees: $${result.totalFees}\n` +
-      `• Net Profit: $${result.netProfit}\n` +
-      `• Profit Margin: ${result.profitMargin}%`
+      `• Total After Fees: $${result.totalAfterFees}\n`
     );
   }
 });
